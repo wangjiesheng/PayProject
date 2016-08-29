@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        
+        http://www.springframework.org/schema/websocket 
+        http://www.springframework.org/schema/websocket/spring-websocket.xsd
+        ">
+
+	<!-- scan base package just for web 扫描需要装载的bean-->
+	<context:component-scan base-package="com.pay">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service" />
+	</context:component-scan>
+
+	<mvc:default-servlet-handler default-servlet-name="default" />
+
+	<!-- 开启了之后它给AnnotationMethodHandlerAdapter初始化7个转换器 -->
+	<mvc:annotation-driven/>
+	
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/appPort/**" />
+			<bean id="payRequestInterceptor" class="com.pay.framework.interceptor.PayRequestInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+</beans>

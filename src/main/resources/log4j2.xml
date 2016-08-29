@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+	<Appenders>
+		<!-- console appender -->
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{DEFAULT} %5p %t - %c{ 1 }:%L - %m%n" />
+		</Console>
+		
+		<!-- rolling file appender -->
+		<RollingFile name="RollingFile" fileName="/home/uenpay/logs/payment/payment.log" filePattern="/home/uenpay/logs/payment/$${date:yyyy-MM}/payment-%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%d{DEFAULT} %5p %t - %c{ 1 }:%L - %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+				<!-- <SizeBasedTriggeringPolicy size="100MB" /> -->
+			</Policies>
+			<DefaultRolloverStrategy min="1"  max="1" />
+		</RollingFile>
+
+	</Appenders>
+	<loggers>
+		<root level="INFO"><!-- DEBUG INFO -->
+			<!-- <appender-ref ref="Console" /> -->
+			<appender-ref ref="RollingFile" />
+		</root>
+	</loggers>
+</configuration>
+
+<!-- 每天自动一个文件,自动压缩备份前一天 -->

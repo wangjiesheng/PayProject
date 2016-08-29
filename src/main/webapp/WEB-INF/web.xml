@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	id="WebApp_ID" version="3.0">
+	<display-name>payment</display-name>
+
+	<!-- 拦截器设置字符集 -->
+	<filter>
+		<filter-name>springUtf8Encoding</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>springUtf8Encoding</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- default mapping -->
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.css</url-pattern>
+		<url-pattern>*.js</url-pattern>
+		<url-pattern>*.html</url-pattern>
+		<url-pattern>*.htm</url-pattern>
+		<url-pattern>*.gif</url-pattern>
+		<url-pattern>*.jpg</url-pattern>
+		<url-pattern>*.png</url-pattern>
+		<url-pattern>*.map</url-pattern>
+		<url-pattern>*.json</url-pattern>
+	</servlet-mapping>
+
+	<!-- spring context loader listener 初始化根上下文,自动装配ApplicationContext的配置信息-->
+	<!-- ContextLoaderListener继承ContextLoader类实现ServletContextListener接口 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- context parameters 加载resources下面的xml配置文件-->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:applicationContext*.xml</param-value>
+	</context-param>
+
+	<context-param>
+		<param-name>defaultHtmlEscape</param-name>
+		<param-value>true</param-value>
+	</context-param>
+
+	<context-param>
+		<param-name>spring.profiles.active</param-name>
+		<param-value>dev</param-value>
+	</context-param>
+	<context-param>
+		<param-name>spring.profiles.default</param-name>
+		<param-value>dev</param-value>
+	</context-param>
+	<context-param>
+		<param-name>spring.liveBeansView.mbeanDomain</param-name>
+		<param-value>dev</param-value>
+	</context-param>
+
+	<!-- spring mvc dispatcher 初始化分发器指定文件到 /WEB-INF/dispatcher-servlet.xml-->
+	<servlet>
+		<servlet-name>dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/dispatcher-servlet.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<!-- init servlet -->
+	<servlet>
+		<servlet-name>initial</servlet-name>
+		<servlet-class>com.pay.framework.servlet.InitServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+	
+	<!-- 默认请求路径 -->
+	<servlet-mapping>
+		<servlet-name>dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!-- error forward 错误页面跳转-->
+	<error-page>
+		<error-code>404</error-code>
+		<location>/resources/errors/404.html</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/resources/errors/404.html</location>
+	</error-page>
+
+	<!-- security configure -->
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>payment</web-resource-name>
+			<url-pattern>/*</url-pattern>
+			<http-method>PUT</http-method>
+			<http-method>DELETE</http-method>
+			<http-method>HEAD</http-method>
+			<http-method>OPTIONS</http-method>
+			<http-method>TRACE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+		</auth-constraint>
+	</security-constraint>
+	
+	<!-- 项目初始化页面 -->
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+</web-app>

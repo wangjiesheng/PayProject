@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/task 
+        http://www.springframework.org/schema/task/spring-task-3.1.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd ">
+
+	<!-- scan service 扫描-->
+	<context:component-scan base-package="com.pay">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+	<!--configure properties file -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="systemPropertiesMode" value="2" />
+		<property name="location" value="file:${user.home}/payment-configure.properties" />
+	</bean>
+
+	<!-- 配置全局属性 -->
+	<bean id="globalConfigureProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="singleton" value="true" />
+		<property name="properties">
+			<props>
+				<prop key="convenience.advice.socket.ip">${convenience.advice.socket.ip}</prop>
+				<prop key="convenience.advice.socket.port">${convenience.advice.socket.port}</prop>
+			</props>
+		</property>
+	</bean>
+	
+</beans>
