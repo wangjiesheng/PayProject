@@ -17,7 +17,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import com.pay.entity.FundPay;
-import com.pay.entity.MessageHandle;
 import com.pay.entity.UenpayConstant;
 import com.pay.framework.mongodb.AbstractParamsLog;
 import com.pay.framework.mongodb.MongoDbUtil;
@@ -34,9 +33,9 @@ public class PayUtil extends AbstractParamsLog{
 	 * @param mess
 	 * @throws IOException
 	 */
-	public static void repData(HttpServletResponse response,MessageHandle mess) throws IOException{
+	public static void repData(HttpServletResponse response, String jsonStr) throws IOException{
 		PrintWriter pw = response.getWriter();
-		pw.write(JsonMapper.resultJson(mess));
+		pw.write(jsonStr);
 		pw.flush();
 		pw.close();
 	}

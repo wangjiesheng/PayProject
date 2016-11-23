@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONObject;
 
 import cfca.sadk.algorithm.common.Mechanism;
 import cfca.sadk.algorithm.common.PKIException;
@@ -90,7 +91,7 @@ public class Util {
 		//Map<String, String> nmap = submitDate(map,"E:\\ye\\project\\mms\\src\\main\\resources\\test1024.pfx", "123456");
 		String json = "";
 		try {
-			json = JsonMapper.resultJson(nmap);
+			json = JSONObject.wrap(nmap).toString();
 			return json;
 		} catch (Exception e) {
 			json = "{\"err\":\"" + "JsonObject is wrong" + "\"}";

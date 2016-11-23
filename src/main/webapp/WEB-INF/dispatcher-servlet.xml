@@ -28,11 +28,11 @@
 	<!-- 开启了之后它给AnnotationMethodHandlerAdapter初始化7个转换器 -->
 	<mvc:annotation-driven/>
 	
-	<mvc:interceptors>
+<!-- 	<mvc:interceptors>
 		<mvc:interceptor>
 			<mvc:mapping path="/appPort/**" />
 			<bean id="payRequestInterceptor" class="com.pay.framework.interceptor.PayRequestInterceptor" />
 		</mvc:interceptor>
-	</mvc:interceptors>
+	</mvc:interceptors> -->
 	
 </beans>

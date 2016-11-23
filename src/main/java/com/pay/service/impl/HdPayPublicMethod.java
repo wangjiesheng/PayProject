@@ -7,9 +7,7 @@
  */
 package com.pay.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,7 +147,7 @@ public class HdPayPublicMethod extends AbstractParamsLog {
 			}
 		} catch (Exception e) {
 			logger.info(appPayId + "_弘达代付查询失败", e);
-			mess.setErrorInfo(PayUtil.exception2Str(e, 30));
+			mess.setErrorInfo("query无响应");
 			mess.setFlag(false);
 			isMessage = true;
 		}
@@ -196,87 +194,34 @@ public class HdPayPublicMethod extends AbstractParamsLog {
 			}
 		} catch (Exception e) {
 			logger.info(appPayId + "_弘达代付查询失败", e);
-			mess.setErrorInfo(PayUtil.exception2Str(e, 30));
+			mess.setErrorInfo("query无响应");
 			mess.setFlag(false);
 		}
 		PayUtil.insertMongoDbData(reqStr, respResult, appPayId, "QUERY");
 		return mess;
 	}
 	
-	public static void main(String[] args) {
-		 pay();
-		//query();
-	}
-	
-	public static void query(){
-		Util util=new Util();
-		String appPayId = "16081500000000002";
-
-		Map<String, String> mapResult = new HashMap<String, String>();
-		Map<String, String> reqMap = new HashMap<String, String>();
-		reqMap.put(HdPayConstant.VERSION, "1.0");
-		reqMap.put(HdPayConstant.TXNTYPE, "00");
-		reqMap.put(HdPayConstant.ENTERPRISEID, "D9FB5353EE9D8649AB8FE87535FE06CC");
-		reqMap.put(HdPayConstant.SIGNMETHOD, "01");
-		reqMap.put(HdPayConstant.ENTERPRISENO, "11023");
-		reqMap.put("settType", "1");
-		reqMap.put(HdPayConstant.ORDERID,"N"+appPayId);//被查询交易的订单号
-		
-
-		String reqStr = "";
-		String respResult = "";
-		reqStr = util.jsonObject(reqMap);
-		logger.info(appPayId + "_弘达代付确认请求报文：" + reqStr);
-		respResult = SocketClient.connServer(reqStr);
-		logger.info(appPayId + "_弘达代付确认返回报文：" + respResult);
-		respResult = respResult.substring(4);
-		mapResult = JsonMapper.readJsonMap(respResult);
-		System.out.println("---------------------------------------");
-		System.out.println(mapResult.toString());
-	}
-	
-	public static void pay(){
-		String operation = "1";
-		Map<String, String> reqMap = new HashMap<String, String>();
-		Map<String, String> mapResult = new HashMap<String, String>();
-		reqMap.put(HdPayConstant.VERSION, "1.0");
-		reqMap.put(HdPayConstant.TXNTYPE, "12");
-		reqMap.put(HdPayConstant.ENTERPRISEID, "D9FB5353EE9D8649AB8FE87535FE06CC");
-		reqMap.put(HdPayConstant.SETTTYPE, operation);//0：表示T+0业务1：表示T+1业务
-		reqMap.put(HdPayConstant.SIGNMETHOD, "01");
-		reqMap.put(HdPayConstant.TXNTIME,getTimeStr(new Date()));
-		reqMap.put(HdPayConstant.ACCNO, "6216261000000000018");
-		reqMap.put(HdPayConstant.TXNAMT, "1");
-		reqMap.put(HdPayConstant.ENTERPRISENO, "11023");
-		reqMap.put(HdPayConstant.ORDERID,"N16081500000000002");
-		reqMap.put(HdPayConstant.OLDMERID, "996381156510001");
-		reqMap.put(HdPayConstant.BANKNO, "");
-		reqMap.put(HdPayConstant.BANKNAME,"招商银行股份有限公司");
-		reqMap.put(HdPayConstant.PAYNAME, "全渠道");
-		reqMap.put(HdPayConstant.PPTYPE, "0");
-		reqMap.put("terminalNo", "1008");
-		reqMap.put(HdPayConstant.BACKURL,"124.74.140.22:9000");
-		
-		reqMap.put(HdPayConstant.NOTE, "尤恩代付newT+"+operation+"业务");
-		
-		Util util=new Util();
-		String reqStr = util.jsonObject(reqMap);
-		logger.info("_弘达代付请求报文："+reqStr);
-		String respResult = SocketClient.connServer(reqStr);
-		logger.info("_弘达代付确认返回报文：" + respResult);
-
-		respResult = respResult.substring(4);
-		mapResult = JsonMapper.readJsonMap(respResult);
-		System.out.println("---------------------------------------");
-		System.out.println(mapResult.toString());
-	}
-	
-	public static String getTimeStr(Date date){
-		SimpleDateFormat timeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-		return timeFormat.format(date);
-	}
-	
 	private static String getBeanValue(String name){
 		return PropertiesUtils.getPropertiesVal("pay.param."+name);
+	}
+	
+	/**
+	 * 查询余额方法
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		long start = System.currentTimeMillis();
+		Util util=new Util();
+		Map<String, String> reqMap = new HashMap<String, String>();
+		reqMap.put(HdPayConstant.VERSION, "1.0");
+		reqMap.put(HdPayConstant.TXNTYPE, "01");
+		reqMap.put(HdPayConstant.ENTERPRISEID, getBeanValue("enterpriseID"));
+		reqMap.put(HdPayConstant.SIGNMETHOD, "01");
+		reqMap.put(HdPayConstant.ENTERPRISENO, getBeanValue("enterpriseNo"));
+		reqMap.put("settType", "0");//T+0 or T+1
+		String reqStr = util.jsonObject(reqMap);
+		String respResult = SocketClient.connServer(reqStr);
+		System.out.println(respResult);
+		System.out.println(System.currentTimeMillis() - start);
 	}
 }

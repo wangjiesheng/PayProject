@@ -7,11 +7,9 @@
  */
 package com.pay.controller;
 
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,10 +26,8 @@ import com.pay.entity.QuickPayRequest;
 import com.pay.framework.appcrypt.AES;
 import com.pay.framework.appcrypt.CryptUtils;
 import com.pay.framework.util.HttpUtils;
-import com.pay.framework.util.JsonMapper;
 import com.pay.framework.util.PayUtil;
 import com.pay.framework.util.ThreadPoolFactory;
-import com.pay.framework.util.XmlConvert;
 import com.pay.service.impl.HdPayPublicMethod;
 import com.pay.service.impl.HdWaitHandle;
 
@@ -45,6 +41,7 @@ public class AppPayPortController {
 	
 	private Logger logger = LogManager.getLogger(AppPayPortController.class);
 	
+	
 	/**
 	 * AES seed
 	 */
@@ -57,9 +54,9 @@ public class AppPayPortController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value="hdPayAction", method=RequestMethod.POST)
-	public void hdPayAction(HttpServletRequest request, @RequestParam(value="requestParam") String  requestParam,HttpServletResponse response)throws Exception{
-		//String transDataXml = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));
-		QuickPayRequest quickPayRequest= XmlConvert.convertToJavaBean((String)request.getAttribute("requestParam"), QuickPayRequest.class);
+	public void hdPayAction(@RequestParam(value="requestParam") String requestParam, HttpServletResponse response)throws Exception{
+		String transDataXml = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));
+		QuickPayRequest quickPayRequest = com.pay.framework.util.XmlConvert.convertToJavaBean(transDataXml, QuickPayRequest.class);
 		String sonPoolType = quickPayRequest.getFundPoolType();
 		String appPayId = quickPayRequest.getAppPayId();
 		String accountName = quickPayRequest.getAccountName();
@@ -72,33 +69,6 @@ public class AppPayPortController {
 		String terminalNo = quickPayRequest.getTerminalNo();
 
 		MessageHandle mess = null;
-		
-		// 数据校验
-		/*if (CommonUtils.chackStrNull(appPayId, accountName, payAmount, time,
-				cardNo, bankName, paymentChannel, sonPoolType, amsPayHandleUrl)) {
-			logger.info(appPayId + "----------->参数异常!");
-			mess = new MessageHandle(false, "99", "参数异常", "参数异常");
-			PayUtil.repData(response, mess);
-			return;
-		}*/
-
-		/*//-----------------------------redis检查----------------------------------
-		boolean isAppPayIdExist = false; 
-		try {
-			isAppPayIdExist = RedissonPaySerialNo.isAppPayIdExist(appPayId, 24, TimeUnit.HOURS);
-		} catch (Exception e1) {
-			logger.info(appPayId+"---->redis异常!!!!!正在重载redis", e1);
-			RedissonClusterFactory.reloadRedissonCon();//出现异常重新加载redis
-			Thread.sleep(2000);//休息两秒
-			isAppPayIdExist = RedissonPaySerialNo.isAppPayIdExist(appPayId, 24, TimeUnit.HOURS);
-		}
-		
-		if(isAppPayIdExist){
-			logger.info(appPayId+"_弘达代付redis拦截重复打款!");
-			mess = new MessageHandle(false, "99", "不能重复打款", "不能重复打款");
-			PayUtil.repData(response, mess);
-			return;
-		}*/
 		
 		FundPay fundPay = new FundPay(appPayId, accountName, cardNo, payAmount, time, paymentChannel, bankName, terminalNo);
 		
@@ -124,11 +94,14 @@ public class AppPayPortController {
 			mess.setErrorInfo(mess.getRespMsg());
 		}
 		
+		String payMsg = mess.getRespMsg();
+		
 		//5、------------------>代付如果发送成功了,就执行查询操作
 		if(mess.isFlag()){
 			// (1)、--------------->弘达代付发起查询交易，等待3s
 			Thread.sleep(3000);
 			mess = HdPayPublicMethod.HdQueryPublic(fundPay,operation, isMessage);
+			mess.setRespMsg(payMsg);
 			
 			// (2)、--------------->第一次不成功时 -->再次查询一遍
 			if (!mess.isFlag()) {
@@ -137,6 +110,7 @@ public class AppPayPortController {
 				}else{
 					Thread.sleep(3000);// 等待3s
 					mess = HdPayPublicMethod.HdQueryPublic(fundPay,operation, isMessage);
+					mess.setRespMsg(payMsg);
 				}
 			}
 		}
@@ -167,7 +141,7 @@ public class AppPayPortController {
 			mess.setResultCode(mess.isFlag() + resultCode);// ams的处理情况也返回给rms,这个数据要存到fund_shop_pre_pay表中
 			mess.setPaySeqNo(fundPay.getPaySeqNo());
 		}
-		PayUtil.repData(response, mess);
+		PayUtil.repData(response, JSONObject.wrap(mess).toString());
 	}
 	
 	/**
@@ -177,24 +151,17 @@ public class AppPayPortController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value="queryHdPayAction", method=RequestMethod.POST)
-	public void queryHdPayAction(HttpServletRequest request,HttpServletResponse response)throws Exception{
-		//String transData = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));//json字符串解密
-		JSONObject rspJsonObject = new JSONObject((String)request.getAttribute("requestParam"));
+	public void queryHdPayAction(@RequestParam(value="requestParam") String requestParam,HttpServletResponse response)throws Exception{
+		String transDataXml = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));
+		JSONObject rspJsonObject = new JSONObject(transDataXml);
 		String appPayId = rspJsonObject.getString("appPayId");
 		String paymentChannel = rspJsonObject.getString("paymentChannel");
-		String operation = "";
-		if("4".equals(paymentChannel)){//4 弘达T+N代付,5 弘达T+0代付
-			operation = "1";
-		}else if("5".equals(paymentChannel)){
-			operation = "0";
-		}
+		String operation = "4".equals(paymentChannel) ? "1" : "5".equals(paymentChannel) ? "0" : "99";//4 弘达T+N代付,5 弘达T+0代付
+		
 		MessageHandle mess = HdPayPublicMethod.HdQueryOrderId(appPayId,operation);
-		String jsonStr = JsonMapper.resultJson(mess);
+		String jsonStr = JSONObject.wrap(mess).toString();
 		logger.info("查询代付返回结果"+appPayId+"--------->"+jsonStr);
 		String encryptJsonStr = AES.encryptString(jsonStr, CryptUtils.encryptToMD5(password));//json字符串加密
-		PrintWriter pw = response.getWriter();
-		pw.write(encryptJsonStr);
-		pw.flush();
-		pw.close();
+		PayUtil.repData(response, encryptJsonStr);
 	}
 }

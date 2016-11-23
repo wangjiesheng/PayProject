@@ -15,9 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.pay.framework.appcrypt.AES;
-import com.pay.framework.appcrypt.CryptUtils;
-
 /**
  * @author wangjiesheng
  * Specification : 文档说明:
@@ -33,7 +30,7 @@ public class PayRequestInterceptor implements HandlerInterceptor{
 	
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		String requestParam = "";
+		/*String requestParam = "";
 		try {
 			requestParam = request.getParameter("requestParam");
 			String transDataXml = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));
@@ -41,7 +38,7 @@ public class PayRequestInterceptor implements HandlerInterceptor{
 		} catch (Exception e) {
 			logger.info("数据转换异常!拦截器阻止进行......"+requestParam);
 			return false;
-		}
+		}*/
 		return true;
 	}
 
