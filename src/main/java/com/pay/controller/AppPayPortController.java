@@ -28,6 +28,7 @@ import com.pay.framework.appcrypt.CryptUtils;
 import com.pay.framework.util.HttpUtils;
 import com.pay.framework.util.PayUtil;
 import com.pay.framework.util.ThreadPoolFactory;
+import com.pay.service.impl.HdPayJsonPublicMethod;
 import com.pay.service.impl.HdPayPublicMethod;
 import com.pay.service.impl.HdWaitHandle;
 
@@ -83,23 +84,19 @@ public class AppPayPortController {
 		mess = HdPayPublicMethod.HdpayPubilc(fundPay, operation, isMessage);//0：表示T+0业务1：表示T+1业务
 		fundPay.setPaySeqNo(fundPay.getTime() + ":" + mess.getPaySeqNo());// time+queryId
 		
-		//3--------------------->能正常发送报文到代付的就更新seq号
-		/*if(mess.isFlag()){
-			fundShopPrePayMapper.updateFundShopPrePayBypaySeqNo(fundPay.getPaySeqNo(), appPayId);// 成功的话更新打款通道返回的queryId,以再次查询结果.
-		}*/
-		
-		//4-------------------->针对这样的错误不需要再次查询：错误信息(监管资金不足)等
-		if(("监管资金不足".equals(mess.getRespMsg()) || "系统异常".equals(mess.getRespMsg()) || "不予承兑".equals(mess.getRespMsg())) && mess.isFlag()){//直接失败,不用查询了,这些情况需要清算自己去核实款项
+		//4-------------------->针对这样的错误不需要再次查询：错误信息(监管资金不足)等                         S1结算卡号不符  Z7监管资金不足
+		if(("Z7".equals(mess.getErrorCode()) || "S1".equals(mess.getErrorCode())
+				|| "系统异常".equals(mess.getRespMsg()) || "不予承兑".equals(mess.getRespMsg())) && mess.isFlag()){//直接失败,不用查询了,这些情况需要清算自己去核实款项
 			mess.setFlag(false);
 			mess.setErrorInfo(mess.getRespMsg());
 		}
 		
-		String payMsg = mess.getRespMsg();
+		String payMsg = mess.getRespMsg();//发送打款返回的信息
 		
 		//5、------------------>代付如果发送成功了,就执行查询操作
 		if(mess.isFlag()){
-			// (1)、--------------->弘达代付发起查询交易，等待3s
-			Thread.sleep(3000);
+			// (1)、--------------->弘达代付发起查询交易，等待2s
+			Thread.sleep(2000);
 			mess = HdPayPublicMethod.HdQueryPublic(fundPay,operation, isMessage);
 			mess.setRespMsg(payMsg);
 			
@@ -144,6 +141,44 @@ public class AppPayPortController {
 		PayUtil.repData(response, JSONObject.wrap(mess).toString());
 	}
 	
+	/** 公开的接口给内部使用
+	 * @param requestParam
+	 * @param response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="hdPayJsonAction", method=RequestMethod.POST)
+	public void hdPayJsonAction(@RequestParam(value="requestParam") String requestParam,HttpServletResponse response) throws Exception{
+		try {
+			String data = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));//请求加密,返回不需要加密
+			String resultJson = HdPayJsonPublicMethod.HdpayJsonPubilc(data);
+			PayUtil.repData(response, resultJson);
+		} catch (Exception e) {
+			JSONObject resultJson = new JSONObject();
+			resultJson.put("respCode", "99");
+			resultJson.put("respMsg", "未知错误");
+			PayUtil.repData(response, resultJson.toString());
+		}
+	}
+	
+	/** 公开查询的接口给内部使用
+	 * @param requestParam
+	 * @param response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="hdQueryJsonAction", method=RequestMethod.POST)
+	public void hdQueryJsonAction(@RequestParam(value="requestParam") String requestParam,HttpServletResponse response) throws Exception{
+		try {
+			String data = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));//请求加密,返回不需要加密
+			String resultJson = HdPayJsonPublicMethod.HdQueryJsonOrderId(data);
+			PayUtil.repData(response, resultJson);
+		} catch (Exception e) {
+			JSONObject resultJson = new JSONObject();
+			resultJson.put("respCode", "99");
+			resultJson.put("respMsg", "未知错误");
+			PayUtil.repData(response, resultJson.toString());
+		}
+	}
+	
 	/**
 	 * 弘达代付查询结果
 	 * @param requestParam
@@ -153,6 +188,7 @@ public class AppPayPortController {
 	@RequestMapping(value="queryHdPayAction", method=RequestMethod.POST)
 	public void queryHdPayAction(@RequestParam(value="requestParam") String requestParam,HttpServletResponse response)throws Exception{
 		String transDataXml = AES.decryptString(requestParam, CryptUtils.encryptToMD5(password));
+		logger.info("上送报文:"+transDataXml);
 		JSONObject rspJsonObject = new JSONObject(transDataXml);
 		String appPayId = rspJsonObject.getString("appPayId");
 		String paymentChannel = rspJsonObject.getString("paymentChannel");

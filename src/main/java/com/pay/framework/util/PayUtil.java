@@ -94,4 +94,12 @@ public class PayUtil extends AbstractParamsLog{
 		SimpleDateFormat timeFormat = new SimpleDateFormat(UenpayConstant.TIME_FORMAT_PATTERN);
 		return timeFormat.format(date);
 	}
+	
+	public static String getBeanValue(String name){
+		return PropertiesUtils.getPropertiesVal("pay.param."+name);
+	}
+	
+	public static String getCommonBeanValue(String name){
+		return PropertiesUtils.getPropertiesVal(name);
+	}
 }

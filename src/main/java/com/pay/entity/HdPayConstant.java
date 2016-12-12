@@ -24,6 +24,9 @@ public class HdPayConstant {
 	public static final String PAYNAME="payName";  //收款人名称
 	public static final String PPTYPE="ppType";  //公/私标识
 	public static final String NOTE="note";  //备注
+	public static final String TERMINALNO="terminalNo";  //终端号
+	
+	
 	
 	/**--------------------------------------------------------------*/
 	public static final String RESPCODE="respCode";  //代付返回码

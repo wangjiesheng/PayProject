@@ -14,11 +14,6 @@ public abstract class AbstractParamsLog {
 	protected static final String MONGODB_NAME = "logdb";
 
 	/**
-	 * dbcollection name
-	 */
-	private static final String COLLECTION_NAME = "mms_requestparams";
-
-	/**
 	 * document request url key
 	 */
 	protected static final String REQUEST_URL_KEY = "requesturl";

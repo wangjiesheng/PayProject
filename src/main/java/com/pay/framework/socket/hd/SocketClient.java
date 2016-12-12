@@ -2,7 +2,7 @@ package com.pay.framework.socket.hd;
 
 import java.io.UnsupportedEncodingException;
 
-import com.pay.framework.util.PropertiesUtils;
+import com.pay.framework.util.PayUtil;
 
 /**
  *@author lb
@@ -14,7 +14,7 @@ public class SocketClient {
 		byte[] reqpack = null;
 		byte[] resppack = null;
 		String rtuInfo = "";
-		String character = getBeanValue("character");
+		String character = PayUtil.getCommonBeanValue("character");
 		try {
 			byte[] reqmsg = info.getBytes(character);
 			int reqlen = reqmsg.length;
@@ -41,7 +41,4 @@ public class SocketClient {
 		return rtuInfo;
 	}
 	
-	private static String getBeanValue(String name){
-		return PropertiesUtils.getPropertiesVal(name);
-	}
 }
